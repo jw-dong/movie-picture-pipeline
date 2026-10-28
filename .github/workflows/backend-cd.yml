@@ -17,15 +17,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/checkout@v5
+      - name: Node.js environment setup
+        uses: actions/setup-node@v4
 
-  test:
+      - name: Install dependencies
+        uses: npm ci
+
+      - name: Run lint
+        use: npm run lint
+
+
+  test: 
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Node.js environment setup
+        uses: actions/setup-node@v4
+
+      - name: Install dependencies
+        uses: npm ci
+
+      - name: Run lint
+        use: npm run test
 
   build:
     runs-on: ubuntu-latest
@@ -38,15 +54,41 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build backend Docker image
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
+          aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+
+      - name: Log in AWS ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        id: login-ecr
+
+      - name: Build backend Docket image
+        env:
+          REGISTRY: ${{steps.login-ecr.outputs.registry}}
+          REPOSITORY: ${{env.ECR_REPO}}
+          IMAGE: ${{github.sha}}
+        run: |
+          docker build --build-arg REACT_APP_MOVIE_APT_URL=${{env.REACT_API_URL}} -t $REGISTRY/$REPOSITORY:$IMAGE ./frontend
 
 
   deploy:
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: starter/backend/k8s
 
     needs:
       - build
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4  
+        uses: actions/checkout@v4
+
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
+          aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
