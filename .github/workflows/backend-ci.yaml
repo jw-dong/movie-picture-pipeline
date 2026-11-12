@@ -1,4 +1,4 @@
-name: Backend CD
+name: Backend CI
 
 on:
   pull_request:
@@ -58,7 +58,9 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
-          aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+          aws-secret-access-key: ${{secrets.AWS_SECRET_KEY}}
+          aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
+          aws-region: ${{env.AWS_REGION}} 
 
       - name: Log in AWS ECR
         uses: aws-actions/amazon-ecr-login@v2
@@ -71,24 +73,3 @@ jobs:
           IMAGE: ${{github.sha}}
         run: |
           docker build --build-arg REACT_APP_MOVIE_APT_URL=${{env.REACT_API_URL}} -t $REGISTRY/$REPOSITORY:$IMAGE ./frontend
-
-
-  deploy:
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: starter/backend/k8s
-
-    needs:
-      - build
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Configure AWS
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
-          aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}

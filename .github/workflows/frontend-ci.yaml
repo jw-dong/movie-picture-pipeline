@@ -1,0 +1,114 @@
+name: Frontend Continuous Integration
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'starter/frontend/**'
+
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPO:
+  REACT_API_URL:
+  WORKING_DIR: starter/frontend
+
+Secrets:
+  AWS_ACCESS_KEY_ID: 
+  AWS_SECRET_KEY: 
+  AWS_SESSION_TOKEN:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ${{env.WORKING_DIR}}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Node.js environment setup
+        uses: actions/setup-node@v4
+        with:
+          node-verison: latest
+          cache: 'npm'
+          cache-dependency-path: ${{env.WORKING_DIR}}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+
+  test: 
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ${{env.WORKING_DIR}}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Node.js environment setup
+        uses: actions/setup-node@v4
+        with:
+          node-verison: latest
+          cache: 'npm'
+          cache-dependency-path: ${{env.WORKING_DIR}}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test
+
+  build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ${{env.WORKING_DIR}}
+
+    needs:
+      - lint
+      - test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Node.js environment setup
+        uses: actions/setup-node@v4
+        with:
+          node-verison: latest
+          cache: 'npm'
+          cache-dependency-path: ${{env.WORKING_DIR}}/package-lock.json
+
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
+          aws-secret-access-key: ${{secrets.AWS_SECRET_KEY}}
+          aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
+          aws-region: ${{env.AWS_REGION}} 
+
+      - name: Log in AWS ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        id: login-ecr
+
+      - name: Build frontend Docker image
+        env:
+          REGISTRY: ${{steps.login-ecr.outputs.registry}}
+          REPOSITORY: ${{env.ECR_REPO}}
+          IMAGE: ${{github.sha}}
+        run: |
+          docker build --build-arg REACT_APP_MOVIE_APT_URL=${{env.REACT_API_URL}} -t $REGISTRY/$REPOSITORY:$IMAGE ./frontend
+          
