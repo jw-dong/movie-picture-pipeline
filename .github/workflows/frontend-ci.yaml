@@ -108,7 +108,7 @@ jobs:
         env:
           REGISTRY: ${{steps.login-ecr.outputs.registry}}
           REPOSITORY: ${{env.ECR_REPO}}
-          IMAGE: ${{github.sha}}
+          IMAGE_TAG: ${{github.sha}}
         run: |
-          docker build --build-arg REACT_APP_MOVIE_APT_URL=${{env.REACT_API_URL}} -t $REGISTRY/$REPOSITORY:$IMAGE ./frontend
+          docker build --build-arg REACT_APP_MOVIE_APT_URL=${{env.REACT_API_URL}} -t $REGISTRY/$REPOSITORY:$IMAGE_TAG ./frontend
           
