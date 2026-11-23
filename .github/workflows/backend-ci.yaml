@@ -11,7 +11,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPO:
+  ECR_REPO: backend
   WORKING_DIR: starter/backend
 
 jobs:
