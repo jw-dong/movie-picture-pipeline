@@ -133,9 +133,17 @@ jobs:
       
       - name: Deploy to Kubernetes
         env:
-          KUBECONFIG: ${{github.workspace}}/kubeconfig.yaml
+          REGISTRY: ${{steps.login-ecr.outputs.registry}}
+          REPOSITORY: frontend
+          IMAGE_TAG: ${{github.sha}}
+          KUBE_CONFIG: ${{secrets.KUBECONFIG}}
+          K8_DIR: starter/frontend/k8s
         run: |
-          kubectl apply -f kubernetes-manifests/frontend-deployment.yaml
+          cd ${{K8_DIR}}
+          aws eks update-kubeconfig --name=cluster --region us-east-1
+          echo "frontend=$REGISTRY/$REPOSITORY:$IMAGE_TAG"
+          kustomize edit set image frontend=$REGISTRY/$REPOSITORY:$IMAGE_TAG
+          kustomize build | kubectl apply -f -
 
       - name: Display URLs
         run: |
