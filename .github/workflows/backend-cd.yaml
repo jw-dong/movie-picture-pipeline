@@ -11,7 +11,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPO: backend
+  ECR_REPO: movie-pciture-pipeline/backend
   EKS_CLUSTER_NAME: movie-picture-pipeline
   WORKING_DIR: starter/backend
   K8S_DIR: starter/backend/k8s

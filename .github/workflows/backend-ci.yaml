@@ -11,7 +11,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPO: backend
+  ECR_REPO: movie-pciture-pipeline/backend
   WORKING_DIR: starter/backend
 
 jobs:

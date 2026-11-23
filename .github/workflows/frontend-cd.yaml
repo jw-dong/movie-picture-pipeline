@@ -11,8 +11,8 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPO: frontend
-  REACT_API_URL: https://6CE26C21E0FBFC3C9069396940DE535F.gr7.us-east-1.eks.amazonaws.com
+  ECR_REPO: movie-pciture-pipeline/frontend
+  REACT_API_URL: 418503742793.dkr.ecr.us-east-1.amazonaws.com
   WORKING_DIR: starter/frontend
 
 jobs:
