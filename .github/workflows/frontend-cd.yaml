@@ -141,7 +141,6 @@ jobs:
         run: |
           cd ${{K8_DIR}}
           aws eks update-kubeconfig --name moive-picture-pipeline --region us-east-1
-          echo "frontend=$REGISTRY/$REPOSITORY:$IMAGE_TAG"
           kustomize edit set image frontend=$REGISTRY/$REPOSITORY:$IMAGE_TAG
           kustomize build | kubectl apply -f -
 

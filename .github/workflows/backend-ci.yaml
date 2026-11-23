@@ -57,9 +57,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install pipenv
           pip install flake8
+          pip install pytest
+          pip install flask
+          pip install flask_cors
 
       - name: Run Test
-        run: cd ${{env.WORKING_DIR}} && pipenv install pytest && pipenv run test
+        run: cd ${{env.WORKING_DIR}} && pipenv run test
 
   build:
     runs-on: ubuntu-latest
