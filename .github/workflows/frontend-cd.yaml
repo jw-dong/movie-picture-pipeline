@@ -21,7 +21,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: starter/frontend
+        working-directory: ${{env.WORKING_DIR}}
 
     steps:
       - name: Checkout code
@@ -38,7 +38,7 @@ jobs:
         run: npm ci
 
       - name: Run lint
-        run: cd ${{WORKING_DIR}} && npm run lint
+        run: npm run lint
 
 
   test: 
@@ -46,7 +46,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: starter/frondend
+        working-directory: ${{env.WORKING_DIR}}
     
     steps:
       - name: Checkout code
@@ -63,7 +63,7 @@ jobs:
         run: npm ci
 
       - name: Run tests
-        run: cd ${{WORKING_DIR}} && npm run test
+        run: npm run test
 
   build:
     runs-on: ubuntu-latest
