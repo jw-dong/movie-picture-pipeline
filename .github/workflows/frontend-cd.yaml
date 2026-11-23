@@ -102,7 +102,7 @@ jobs:
           IMAGE_TAG: ${{github.sha}}
         run: |
           cd ${{WORKING_DIR}} 
-          docker build --build-arg REACT_APP_MOVIE_APT_URL=${{env.REACT_API_URL}} -t $REGISTRY/$REPOSITORY:$IMAGE_TAG ./frontend
+          docker build --build-arg REACT_APP_MOVIE_APT_URL=${{env.REACT_API_URL}} -t $REGISTRY/$REPOSITORY:$IMAGE_TAG
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
       - name: Configure Kubectl
@@ -140,14 +140,14 @@ jobs:
           K8_DIR: starter/frontend/k8s
         run: |
           cd ${{K8_DIR}}
-          aws eks update-kubeconfig --name=cluster --region us-east-1
+          aws eks update-kubeconfig --name moive-picture-pipeline --region us-east-1
           echo "frontend=$REGISTRY/$REPOSITORY:$IMAGE_TAG"
           kustomize edit set image frontend=$REGISTRY/$REPOSITORY:$IMAGE_TAG
           kustomize build | kubectl apply -f -
 
       - name: Display URLs
+        env:
+          K8_DIR: starter/frontend/k8s
         run: |
+          cd ${{K8_DIR}}
           kubectl get svc -A
-          BE_SERVICE_URL=$(kubectl get svc backend -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-          echo "BE_SERVICE_URL=${BE_SERVICE_URL}"
-          echo "::set-output name=be_service_url::${BE_SERVICE_URL}"  
