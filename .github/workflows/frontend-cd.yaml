@@ -5,9 +5,15 @@ on:
     branches:
       - main
     paths:
-      - 'frontend/**'
+      - 'starter/frontend/**'
 
   workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPO:
+  REACT_API_URL:
+  WORKING_DIR: starter/frontend
 
 jobs:
   lint:
@@ -15,7 +21,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: starter/frondend
+        working-directory: starter/frontend
 
     steps:
       - name: Checkout code
@@ -32,7 +38,7 @@ jobs:
         run: npm ci
 
       - name: Run lint
-        run: npm run lint
+        run: cd ${{WORKING_DIR}} && npm run lint
 
 
   test: 
@@ -57,7 +63,7 @@ jobs:
         run: npm ci
 
       - name: Run tests
-        run: npm run test
+        run: cd ${{WORKING_DIR}} && npm run test
 
   build:
     runs-on: ubuntu-latest
@@ -93,9 +99,15 @@ jobs:
         env:
           REGISTRY: ${{steps.login-ecr.outputs.registry}}
           REPOSITORY: ${{env.ECR_REPO}}
-          IMAGE: ${{github.sha}}
+          IMAGE_TAG: ${{github.sha}}
         run: |
-          docker build --build-arg REACT_APP_MOVIE_APT_URL=${{env.REACT_API_URL}} -t $REGISTRY/$REPOSITORY:$IMAGE ./frontend
+          cd ${{WORKING_DIR}} 
+          docker build --build-arg REACT_APP_MOVIE_APT_URL=${{env.REACT_API_URL}} -t $REGISTRY/$REPOSITORY:$IMAGE_TAG ./frontend
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+
+      - name: Configure Kubectl
+        run: aws eks update-kubeconfig --name moive-picture-pipeline --region us-east-1
+
 
   deploy:
     runs-on: ubuntu-latest
@@ -115,4 +127,19 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
-          aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+          aws-secret-access-key: ${{secrets.AWS_SECRET_KEY}}
+          aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
+          aws-region: ${{env.AWS_REGION}} 
+      
+      - name: Deploy to Kubernetes
+        env:
+          KUBECONFIG: ${{github.workspace}}/kubeconfig.yaml
+        run: |
+          kubectl apply -f kubernetes-manifests/frontend-deployment.yaml
+
+      - name: Display URLs
+        run: |
+          kubectl get svc -A
+          BE_SERVICE_URL=$(kubectl get svc backend -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          echo "BE_SERVICE_URL=${BE_SERVICE_URL}"
+          echo "::set-output name=be_service_url::${BE_SERVICE_URL}"  
